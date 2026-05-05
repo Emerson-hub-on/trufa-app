@@ -97,19 +97,20 @@
 
   </div>
 </template>
-
+<!-- pages/admin.vue -->
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
 
 const supabase = useSupabaseClient() as any
-const user = useSupabaseUser()
 
 const usuarios = ref<any[]>([])
+const novaUsuaria = reactive({ email: '', password: '', role: 'user' })
+const criando = ref(false)
+const erroNova = ref('')
+const sucessoNova = ref(false)
 
-
-// ── Aguarda sessão antes de verificar role ──────────────────
+// ── UM ÚNICO onMounted ──────────────────────────────────────
 onMounted(async () => {
-  // Pega a sessão diretamente (não depende do ref reativo)
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session?.user?.id) {
@@ -131,11 +132,13 @@ onMounted(async () => {
   await carregarUsuarios()
 })
 
-// ── Criar usuária ───────────────────────────────────────────
-const novaUsuaria = reactive({ email: '', password: '', role: 'user' })
-const criando = ref(false)
-const erroNova = ref('')
-const sucessoNova = ref(false)
+async function carregarUsuarios() {
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false })
+  usuarios.value = data ?? []
+}
 
 async function criarUsuaria() {
   erroNova.value = ''
@@ -147,7 +150,6 @@ async function criarUsuaria() {
   }
 
   criando.value = true
-
   try {
     await $fetch('/api/admin/criar-usuario', {
       method: 'POST',
@@ -157,13 +159,10 @@ async function criarUsuaria() {
         role: novaUsuaria.role,
       },
     })
-
     sucessoNova.value = true
     novaUsuaria.email = ''
     novaUsuaria.password = ''
     novaUsuaria.role = 'user'
-
-    // Recarrega a lista para mostrar a nova usuária
     await carregarUsuarios()
   } catch (err: any) {
     erroNova.value = err?.data?.message ?? 'Erro ao criar usuária.'
@@ -172,31 +171,6 @@ async function criarUsuaria() {
   }
 }
 
-// ── Carregar lista ──────────────────────────────────────────
-async function carregarUsuarios() {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false })
-  usuarios.value = data ?? []
-}
-
-onMounted(async () => {
-  const { data: perfil } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.value?.id)
-    .single()
-
-  if (perfil?.role !== 'admin') {
-    navigateTo('/')
-    return
-  }
-
-  await carregarUsuarios()
-})
-
-// ── Bloquear / Ativar ───────────────────────────────────────
 async function toggleAtivo(u: any) {
   const novoStatus = !u.ativo
   await supabase.from('profiles').update({ ativo: novoStatus }).eq('id', u.id)

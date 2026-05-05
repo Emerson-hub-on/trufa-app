@@ -148,6 +148,7 @@ async function logout() {
 
 const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
+  '/admin': 'Admin',
   '/vendas': 'Vendas',
   '/sabores': 'Sabores',
   '/compras': 'Compras',
