@@ -62,7 +62,7 @@
         <div class="px-5 py-3 flex flex-wrap items-center gap-2 border-b border-pink-50">
           <button
             v-for="p in periodos" :key="p.label"
-            @click="periodoAtivo = p.label; dataInicio = p.inicio(); dataFim = p.fim()"
+            @click="selecionarPeriodo(p)"
             class="px-3 py-1.5 rounded-full border text-xs font-bold transition-all"
             :class="periodoAtivo === p.label ? 'bg-fuchsia-400 border-fuchsia-400 text-white' : 'bg-white border-pink-200 text-stone-600 hover:border-fuchsia-300'"
           >
@@ -196,106 +196,17 @@
 
 <script setup lang="ts">
 import { useTrufaStore } from '~/stores/trufa'
+import { useSaborFiltroDropdown } from '~/composables/vendas/useSaborFiltroDropdown'
+import { useVendasFiltradas } from '~/composables/vendas/useVendasFiltradas'
+import { useVendaModal } from '~/composables/vendas/useVendaModal'
 
 definePageMeta({ layout: 'default' })
 
 const store = useTrufaStore()
 
-// ── Filtro sabor ───────────────────────────────────────────
-const saborFiltro = ref<string | null>(null)
-const dropdownOpen = ref(false)
-const dropdownRef = ref<HTMLElement | null>(null)
-
-// ── Filtro período ─────────────────────────────────────────
-const periodoAtivo = ref('Este mês')
-const dataInicio = ref('')
-const dataFim = ref('')
-
-const periodos = [
-  {
-    label: 'Hoje',
-    inicio: () => new Date().toISOString().slice(0, 10),
-    fim: () => new Date().toISOString().slice(0, 10),
-  },
-  {
-    label: 'Esta semana',
-    inicio: () => {
-      const d = new Date()
-      d.setDate(d.getDate() - d.getDay())
-      return d.toISOString().slice(0, 10)
-    },
-    fim: () => new Date().toISOString().slice(0, 10),
-  },
-  {
-    label: 'Este mês',
-    inicio: () => {
-      const d = new Date()
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
-    },
-    fim: () => new Date().toISOString().slice(0, 10),
-  },
-  {
-    label: 'Tudo',
-    inicio: () => '',
-    fim: () => '',
-  },
-]
-
-onMounted(() => {
-  const mesAtual = periodos.find(p => p.label === 'Este mês')!
-  dataInicio.value = mesAtual.inicio()
-  dataFim.value = mesAtual.fim()
-
-  document.addEventListener('click', (e) => {
-    if (dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
-      dropdownOpen.value = false
-    }
-  })
-})
-
-// ── Computed filtrado ──────────────────────────────────────
-const vendasFiltradas = computed(() =>
-  store.vendas.filter(v => {
-    const porSabor = !saborFiltro.value || v.produto === saborFiltro.value
-    const apos = !dataInicio.value || v.data >= dataInicio.value
-    const antes = !dataFim.value || v.data <= dataFim.value
-    return porSabor && apos && antes
-  })
-)
-
-const totalFiltrado = computed(() =>
-  vendasFiltradas.value.reduce((acc, v) => acc + v.quantidade * v.valorUnit, 0)
-)
-
-const unidadesFiltradas = computed(() =>
-  vendasFiltradas.value.reduce((acc, v) => acc + v.quantidade, 0)
-)
-
-// ── Modal ──────────────────────────────────────────────────
-const showModal = ref(false)
-const form = reactive({ data: '', produto: '', quantidade: 0, valorUnit: 0 })
-
-function abrirModal() {
-  Object.assign(form, {
-    data: '',
-    produto: saborFiltro.value ?? '',
-    quantidade: 0,
-    valorUnit: saborFiltro.value ? (store.sabores.find(s => s.nome === saborFiltro.value)?.preco ?? 0) : 0,
-  })
-  showModal.value = true
-}
-
-function preencherPreco() {
-  const sabor = store.sabores.find(s => s.nome === form.produto)
-  if (sabor) form.valorUnit = sabor.preco
-}
-
-async function salvar() {
-  if (!form.data || !form.produto || !form.quantidade || !form.valorUnit) return
-  await store.adicionarVenda({ ...form })
-  Object.assign(form, { data: '', produto: '', quantidade: 0, valorUnit: 0 })
-  showModal.value = false
-}
+const { saborFiltro, dropdownOpen, dropdownRef } = useSaborFiltroDropdown()
+const { periodoAtivo, dataInicio, dataFim, periodos, selecionarPeriodo, vendasFiltradas, totalFiltrado, unidadesFiltradas } = useVendasFiltradas(saborFiltro)
+const { showModal, form, abrirModal, preencherPreco, salvar } = useVendaModal(saborFiltro)
 
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })

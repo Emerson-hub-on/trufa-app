@@ -119,55 +119,13 @@
 
 <script setup lang="ts">
 import { useTrufaStore } from '~/stores/trufa'
-import type { Sabor } from '~/stores/trufa'
+import { useSaborModal } from '~/composables/sabores/useSaborModal'
 
 definePageMeta({ layout: 'default' })
 
 const store = useTrufaStore()
-const user = useSupabaseUser()
 
-const showModal = ref(false)
-const editando = ref<Sabor | null>(null)
-const form = reactive({ nome: '', preco: 0, descricao: '' })
-
-function abrirModalNovo() {
-  editando.value = null
-  Object.assign(form, { nome: '', preco: 0, descricao: '' })
-  showModal.value = true
-}
-
-function abrirModalEditar(sabor: Sabor) {
-  editando.value = sabor
-  Object.assign(form, { nome: sabor.nome, preco: sabor.preco, descricao: sabor.descricao })
-  showModal.value = true
-}
-
-async function salvar() {
-  if (!form.nome || !form.preco) return
-
-  if (editando.value) {
-    await store.editarSabor(editando.value.id, {
-      nome: form.nome,
-      preco: form.preco,
-      descricao: form.descricao,
-    })
-  } else {
-    await store.adicionarSabor({
-      nome: form.nome,
-      preco: form.preco,
-      descricao: form.descricao,
-    })
-  }
-
-  showModal.value = false
-}
-
-async function excluir() {
-  if (!editando.value) return
-  if (!confirm(`Excluir "${editando.value.nome}"? As vendas existentes não serão apagadas.`)) return
-  await store.removerSabor(editando.value.id)
-  showModal.value = false
-}
+const { showModal, editando, form, abrirModalNovo, abrirModalEditar, salvar, excluir } = useSaborModal()
 
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
