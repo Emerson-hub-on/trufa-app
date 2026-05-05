@@ -139,8 +139,8 @@
 
 <script setup lang="ts">
 import { useTrufaStore } from '~/stores/trufa'
-import { usePeriodoFiltro } from '~/composables/usePeriodoFiltro'
-import { useComprasForm } from '~/composables/useComprasForm'
+import { usePeriodoFiltro } from '~/composables/compras/usePeriodoFiltro'
+import { useComprasForm } from '~/composables/compras/useComprasForm'
 
 
 definePageMeta({ layout: 'default' })

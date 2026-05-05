@@ -315,10 +315,10 @@
 
 <script setup lang="ts">
 import { useTrufaStore } from '~/stores/trufa'
-import { useFichaNavegacao } from '~/composables/useFichaNavegacao'
-import { useFichaCalculo } from '~/composables/useFichaCalculo'
-import { useFichaModal } from '~/composables/useFichaModal'
-import { useIngredienteModal } from '~/composables/useIngredienteModal'
+import { useFichaNavegacao } from '~/composables/fichas/useFichaNavegacao'
+import { useFichaCalculo } from '~/composables/fichas/useFichaCalculo'
+import { useFichaModal } from '~/composables/fichas/useFichaModal'
+import { useIngredienteModal } from '~/composables/fichas/useIngredienteModal'
 
 definePageMeta({ layout: 'default' })
 

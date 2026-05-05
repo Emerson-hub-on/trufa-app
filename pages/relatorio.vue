@@ -387,9 +387,9 @@
 </template>
 
 <script setup lang="ts">
-import { useRelatorioExportar } from '~/composables/useRelatorioExportar';
-import { useRelatorioFiltros } from '~/composables/useRelatorioFiltros';
-import { useRelatorioFormatar } from '~/composables/useRelatorioFormatar';
+import { useRelatorioExportar } from '~/composables/relatorios/useRelatorioExportar';
+import { useRelatorioFiltros } from '~/composables/relatorios/useRelatorioFiltros';
+import { useRelatorioFormatar } from '~/composables/relatorios/useRelatorioFormatar';
 
 definePageMeta({ layout: 'default' })
 
