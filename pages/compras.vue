@@ -14,7 +14,7 @@
       <div class="px-5 py-3 flex flex-wrap items-center gap-2 border-b border-pink-50">
         <button
           v-for="p in periodos" :key="p.label"
-          @click="periodoAtivo = p.label; dataInicio = p.inicio(); dataFim = p.fim()"
+          @click="selecionarPeriodo(p)"
           class="px-3 py-1.5 rounded-full border text-xs font-bold transition-all"
           :class="periodoAtivo === p.label ? 'bg-orange-400 border-orange-400 text-white' : 'bg-white border-pink-200 text-stone-600 hover:border-orange-300'"
         >
@@ -139,61 +139,17 @@
 
 <script setup lang="ts">
 import { useTrufaStore } from '~/stores/trufa'
+import { usePeriodoFiltro } from '~/composables/usePeriodoFiltro'
+import { useComprasForm } from '~/composables/useComprasForm'
+
 
 definePageMeta({ layout: 'default' })
 
 const store = useTrufaStore()
-const showModal = ref(false)
-const form = reactive({ data: '', item: '', quantidade: '', custo: 0 })
 
-// ── Filtro período ─────────────────────────────────────────
-const periodoAtivo = ref('Este mês')
-const dataInicio = ref('')
-const dataFim = ref('')
-
-const periodos = [
-  {
-    label: 'Hoje',
-    inicio: () => new Date().toISOString().slice(0, 10),
-    fim: () => new Date().toISOString().slice(0, 10),
-  },
-  {
-    label: 'Esta semana',
-    inicio: () => {
-      const d = new Date()
-      d.setDate(d.getDate() - d.getDay())
-      return d.toISOString().slice(0, 10)
-    },
-    fim: () => new Date().toISOString().slice(0, 10),
-  },
-  {
-    label: 'Este mês',
-    inicio: () => {
-      const d = new Date()
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
-    },
-    fim: () => new Date().toISOString().slice(0, 10),
-  },
-  {
-    label: 'Tudo',
-    inicio: () => '',
-    fim: () => '',
-  },
-]
-
-onMounted(() => {
-  const mesAtual = periodos.find(p => p.label === 'Este mês')!
-  dataInicio.value = mesAtual.inicio()
-  dataFim.value = mesAtual.fim()
-})
-
-const comprasFiltradas = computed(() =>
-  store.compras.filter(c => {
-    const apos = !dataInicio.value || c.data >= dataInicio.value
-    const antes = !dataFim.value || c.data <= dataFim.value
-    return apos && antes
-  })
-)
+const { showModal, form, salvar } = useComprasForm()
+const { periodoAtivo, dataInicio, dataFim, periodos, selecionarPeriodo, itensFiltrados: comprasFiltradas } =
+  usePeriodoFiltro(computed(() => store.compras))
 
 const totalFiltrado = computed(() =>
   comprasFiltradas.value.reduce((acc, c) => acc + c.custo, 0)
@@ -201,12 +157,5 @@ const totalFiltrado = computed(() =>
 
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
-function salvar() {
-  if (!form.data || !form.item || !form.quantidade || !form.custo) return
-  store.adicionarCompra({ ...form })
-  Object.assign(form, { data: '', item: '', quantidade: '', custo: 0 })
-  showModal.value = false
 }
 </script>

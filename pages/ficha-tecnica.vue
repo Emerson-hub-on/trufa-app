@@ -315,154 +315,19 @@
 
 <script setup lang="ts">
 import { useTrufaStore } from '~/stores/trufa'
-import type { FichaTecnica, Ingrediente } from '~/stores/trufa'
+import { useFichaNavegacao } from '~/composables/useFichaNavegacao'
+import { useFichaCalculo } from '~/composables/useFichaCalculo'
+import { useFichaModal } from '~/composables/useFichaModal'
+import { useIngredienteModal } from '~/composables/useIngredienteModal'
 
 definePageMeta({ layout: 'default' })
 
 const store = useTrufaStore()
-const user = useSupabaseUser()
 
-// ── Navegação entre lista e detalhe ───────────────────────
-const fichaSelecionada = ref<FichaTecnica | null>(null)
-
-// Mantém a ficha selecionada atualizada quando a store muda
-watch(() => store.fichasTecnicas, (fichas) => {
-  if (fichaSelecionada.value) {
-    const atualizada = fichas.find(f => f.id === fichaSelecionada.value!.id)
-    if (atualizada) fichaSelecionada.value = atualizada
-  }
-}, { deep: true })
-
-// ── Helpers de cálculo ─────────────────────────────────────
-function custoTotal(f: FichaTecnica) {
-  return f.ingredientes.reduce((acc, i) => acc + i.custo, 0)
-}
-
-function precoSabor(nome: string) {
-  return store.sabores.find(s => s.nome === nome)?.preco ?? 0
-}
-
-function lucroEstimado(f: FichaTecnica) {
-  const preco = precoSabor(f.nome)
-  const custoUn = f.producao > 0 ? custoTotal(f) / f.producao : 0
-  return preco - custoUn
-}
-
-function margemLucro(f: FichaTecnica) {
-  const preco = precoSabor(f.nome)
-  if (preco === 0) return 0
-  return Math.round((lucroEstimado(f) / preco) * 100)
-}
-
-function percIngrediente(f: FichaTecnica, custo: number) {
-  const total = custoTotal(f)
-  return total > 0 ? Math.round((custo / total) * 100) : 0
-}
-
-// ── Modal: Ficha (criar / editar) ─────────────────────────
-const showModalFicha = ref(false)
-const editandoFicha = ref<FichaTecnica | null>(null)
-const formFicha = reactive({ nome: '', producao: 0 })
-
-function abrirModalNovaFicha() {
-  editandoFicha.value = null
-  Object.assign(formFicha, { nome: '', producao: 0 })
-  showModalFicha.value = true
-}
-
-function abrirModalEditarFicha(f: FichaTecnica) {
-  editandoFicha.value = f
-  Object.assign(formFicha, { nome: f.nome, producao: f.producao })
-  showModalFicha.value = true
-}
-
-async function salvarFicha() {
-  if (!formFicha.nome || !formFicha.producao) return
-
-  if (editandoFicha.value) {
-    // Atualiza localmente (sem action de editar ficha na store ainda)
-    editandoFicha.value.nome = formFicha.nome
-    editandoFicha.value.producao = formFicha.producao
-    const supabase = useSupabaseClient() as any
-    await supabase.from('fichas_tecnicas').update({
-      nome: formFicha.nome,
-      producao: formFicha.producao,
-    }).eq('id', editandoFicha.value.id)
-  } else {
-    const supabase = useSupabaseClient() as any
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    await store.adicionarFicha({
-      nome: formFicha.nome,
-      producao: formFicha.producao,
-      ingredientes: [],
-    }, session?.user?.id)  // ← passa o userId
-
-    const nova = store.fichasTecnicas.find(f => f.nome === formFicha.nome)
-    if (nova) fichaSelecionada.value = nova
-  }
-
-  showModalFicha.value = false
-}
-
-async function confirmarExcluir(f: FichaTecnica) {
-  if (!confirm(`Excluir a ficha "${f.nome}"?`)) return
-  await store.removerFicha(f.id)
-  fichaSelecionada.value = null
-}
-
-// ── Modal: Ingrediente ─────────────────────────────────────
-const showModalIngrediente = ref(false)
-const formIngrediente = reactive({ nome: '', qtd: 0, unidade: 'g', custo: 0 })
-
-async function adicionarIngrediente() {
-  if (!formIngrediente.nome || !formIngrediente.qtd || !formIngrediente.custo) return
-  if (!fichaSelecionada.value) return
-
-  const novoIngrediente: Ingrediente = {
-    nome: formIngrediente.nome,
-    quantidade: `${formIngrediente.qtd}${formIngrediente.unidade}`,
-    custo: formIngrediente.custo,
-  }
-
-  const supabase = useSupabaseClient() as any
-  const { error } = await supabase.from('ingredientes').insert({
-    ficha_id: fichaSelecionada.value.id,
-    nome: novoIngrediente.nome,
-    quantidade: novoIngrediente.quantidade,
-    custo: novoIngrediente.custo,
-  })
-
-  if (!error) {
-    fichaSelecionada.value.ingredientes.push(novoIngrediente)
-    Object.assign(formIngrediente, { nome: '', qtd: 0, unidade: 'g', custo: 0 })
-    showModalIngrediente.value = false
-  }
-}
-
-async function removerIngrediente(idx: number) {
-  if (!fichaSelecionada.value) return
-  const ing = fichaSelecionada.value.ingredientes[idx]
-  if (!ing) return
-  if (!confirm(`Remover "${ing.nome}"?`)) return
-
-  // Busca o id do ingrediente no banco para deletar
-  const supabase = useSupabaseClient() as any
-  const { data } = await supabase
-    .from('ingredientes')
-    .select('id')
-    .eq('ficha_id', fichaSelecionada.value.id)
-    .eq('nome', ing.nome)
-    .eq('quantidade', ing.quantidade)
-    .limit(1)
-    .single()
-
-  if (data?.id) {
-    await supabase.from('ingredientes').delete().eq('id', data.id)
-  }
-
-  fichaSelecionada.value.ingredientes.splice(idx, 1)
-}
+const { fichaSelecionada } = useFichaNavegacao()
+const { custoTotal, precoSabor, lucroEstimado, margemLucro, percIngrediente } = useFichaCalculo()
+const { showModalFicha, formFicha, editandoFicha, abrirModalNovaFicha, abrirModalEditarFicha, salvarFicha, confirmarExcluir } = useFichaModal(fichaSelecionada)
+const { showModalIngrediente, formIngrediente, adicionarIngrediente, removerIngrediente } = useIngredienteModal(fichaSelecionada)
 
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
