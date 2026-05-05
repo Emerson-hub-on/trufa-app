@@ -116,7 +116,9 @@
             </tbody>
             <tfoot v-if="vendasFiltradas.length > 0">
               <tr class="border-t-2 border-rose-200 bg-rose-50/60">
-                <td colspan="4" class="px-4 sm:px-5 py-3 font-black text-rose-700 text-xs uppercase tracking-wide">Total</td>
+                <td colspan="2" class="px-4 sm:px-5 py-3 font-black text-rose-700 text-xs uppercase tracking-wide">Total</td>
+                <td class="px-4 sm:px-5 py-3 text-right font-black text-rose-700">{{ totalUnidades }}</td>
+                <td class="px-4 sm:px-5 py-3"></td>
                 <td class="px-4 sm:px-5 py-3 text-right font-black text-rose-600">{{ formatCurrency(totalVendas) }}</td>
               </tr>
             </tfoot>
@@ -196,7 +198,8 @@
             </tbody>
             <tfoot v-if="comprasFiltradas.length > 0">
               <tr class="border-t-2 border-orange-200 bg-orange-50/60">
-                <td colspan="3" class="px-4 sm:px-5 py-3 font-black text-orange-700 text-xs uppercase tracking-wide">Total</td>
+                <td colspan="2" class="px-4 sm:px-5 py-3 font-black text-orange-700 text-xs uppercase tracking-wide">Total</td>
+                <td class="px-4 sm:px-5 py-3 font-black text-orange-700">{{ comprasFiltradas.length }} itens</td>
                 <td class="px-4 sm:px-5 py-3 text-right font-black text-orange-600">{{ formatCurrency(totalCompras) }}</td>
               </tr>
             </tfoot>
