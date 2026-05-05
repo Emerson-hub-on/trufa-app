@@ -133,10 +133,8 @@ onMounted(async () => {
 })
 
 async function carregarUsuarios() {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false })
+  // Usa a API route server-side que bypassa o RLS
+  const data = await $fetch('/api/admin/usuarios')
   usuarios.value = data ?? []
 }
 
