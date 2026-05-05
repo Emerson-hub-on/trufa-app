@@ -106,6 +106,31 @@ const user = useSupabaseUser()
 
 const usuarios = ref<any[]>([])
 
+
+// ── Aguarda sessão antes de verificar role ──────────────────
+onMounted(async () => {
+  // Pega a sessão diretamente (não depende do ref reativo)
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session?.user?.id) {
+    navigateTo('/login')
+    return
+  }
+
+  const { data: perfil } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .single()
+
+  if (perfil?.role !== 'admin') {
+    navigateTo('/')
+    return
+  }
+
+  await carregarUsuarios()
+})
+
 // ── Criar usuária ───────────────────────────────────────────
 const novaUsuaria = reactive({ email: '', password: '', role: 'user' })
 const criando = ref(false)
