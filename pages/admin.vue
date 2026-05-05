@@ -1,0 +1,91 @@
+<template>
+  <div class="flex flex-col gap-4">
+    <div class="bg-white border border-pink-100 rounded-3xl overflow-hidden shadow-sm">
+      <div class="px-5 py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50">
+        <h2 class="font-black text-rose-700 text-sm uppercase tracking-wide">👑 Gerenciar Usuárias</h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs font-bold uppercase tracking-widest text-stone-600 border-b border-pink-50">
+              <th class="text-left px-5 py-3">E-mail</th>
+              <th class="text-left px-5 py-3">Perfil</th>
+              <th class="text-left px-5 py-3">Status</th>
+              <th class="text-left px-5 py-3">Cadastro</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-pink-50">
+            <tr v-if="usuarios.length === 0">
+              <td colspan="5" class="text-center py-8 text-stone-400">Nenhuma usuária encontrada</td>
+            </tr>
+            <tr v-for="u in usuarios" :key="u.id" class="hover:bg-rose-50/50 transition-colors">
+              <td class="px-5 py-3 font-bold text-stone-700">{{ u.email }}</td>
+              <td class="px-5 py-3">
+                <span :class="u.role === 'admin' ? 'bg-fuchsia-100 text-fuchsia-700' : 'bg-stone-100 text-stone-600'"
+                  class="text-xs font-bold px-2 py-1 rounded-full">
+                  {{ u.role === 'admin' ? '👑 Admin' : '👤 Usuária' }}
+                </span>
+              </td>
+              <td class="px-5 py-3">
+                <span :class="u.ativo ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-500'"
+                  class="text-xs font-bold px-2 py-1 rounded-full">
+                  {{ u.ativo ? 'Ativa' : 'Bloqueada' }}
+                </span>
+              </td>
+              <td class="px-5 py-3 text-stone-600 text-xs">{{ formatDate(u.created_at) }}</td>
+              <td class="px-5 py-3 flex gap-2">
+                <button @click="toggleAtivo(u)"
+                  :class="u.ativo ? 'text-red-400 hover:text-red-600' : 'text-emerald-500 hover:text-emerald-700'"
+                  class="text-xs font-bold transition-colors">
+                  {{ u.ativo ? 'Bloquear' : 'Ativar' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({ layout: 'default' })
+
+const supabase = useSupabaseClient() as any
+const user = useSupabaseUser()
+
+const usuarios = ref<any[]>([])
+
+onMounted(async () => {
+  // Verifica se é admin
+  const { data: perfil } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.value?.id)
+    .single()
+
+  if (perfil?.role !== 'admin') {
+    navigateTo('/')
+    return
+  }
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  usuarios.value = data ?? []
+})
+
+async function toggleAtivo(u: any) {
+  const novoStatus = !u.ativo
+  await supabase.from('profiles').update({ ativo: novoStatus }).eq('id', u.id)
+  u.ativo = novoStatus
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString('pt-BR')
+}
+</script>
