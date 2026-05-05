@@ -121,6 +121,15 @@
                 </td>
               </tr>
             </tbody>
+            <tfoot>
+              <tr class="border-t-2 border-pink-200 bg-pink-50/40">
+                <td class="px-5 py-3 text-xs font-black uppercase tracking-widest text-stone-500" colspan="2">Total</td>
+                <td class="px-5 py-3 font-black text-stone-700">{{ unidadesFiltradas }}</td>
+                <td class="px-5 py-3"></td>
+                <td class="px-5 py-3 font-black text-rose-500">{{ formatCurrency(totalFiltrado) }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -143,6 +152,21 @@
             </div>
             <div class="mt-2 text-right">
               <p class="text-sm font-black text-rose-500">{{ formatCurrency(v.quantidade * v.valorUnit) }}</p>
+            </div>
+          </div>
+          <div v-if="vendasFiltradas.length > 0" class="bg-rose-50 border border-rose-200 rounded-2xl p-4">
+            <div class="flex justify-between items-center">
+              <p class="font-black text-stone-700 text-sm uppercase tracking-wide">Total</p>
+              <div class="flex gap-6 text-sm text-right">
+                <div>
+                  <p class="text-xs text-stone-400 font-bold">Qtd</p>
+                  <p class="font-black text-stone-700">{{ unidadesFiltradas }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-stone-400 font-bold">Total</p>
+                  <p class="font-black text-rose-500">{{ formatCurrency(totalFiltrado) }}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

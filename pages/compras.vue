@@ -69,7 +69,8 @@
           </tbody>
           <tfoot v-if="comprasFiltradas.length > 0">
             <tr class="border-t-2 border-pink-100 bg-rose-50/50">
-              <td colspan="3" class="px-5 py-3 text-xs font-bold uppercase tracking-widest text-stone-400">Total</td>
+              <td colspan="2" class="px-5 py-3 text-xs font-bold uppercase tracking-widest text-stone-400">Total</td>
+              <td class="px-5 py-3 font-black text-stone-700">{{ comprasFiltradas.length }} itens</td>
               <td class="px-5 py-3 font-black text-orange-400">{{ formatCurrency(totalFiltrado) }}</td>
               <td></td>
             </tr>
