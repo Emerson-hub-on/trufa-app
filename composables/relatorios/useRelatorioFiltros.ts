@@ -82,18 +82,19 @@ export function useRelatorioFiltros() {
   )
   const rendimento = computed(() => totalVendas.value - totalCompras.value)
 
-  const porSabor = computed(() => {
-    const map: Record<string, { total: number; unidades: number }> = {}
-    vendasFiltradas.value.forEach(v => {
-      if (!map[v.produto]) map[v.produto] = { total: 0, unidades: 0 }
-      map[v.produto]!.total += v.quantidade * v.valorUnit
-      map[v.produto]!.unidades += v.quantidade
-    })
-    const total = totalVendas.value || 1
-    return Object.entries(map)
-      .map(([nome, d]) => ({ nome, ...d, percentual: (d.total / total) * 100 }))
-      .sort((a, b) => b.total - a.total)
+const porSabor = computed(() => {
+  const map: Record<string, { nome: string; total: number; unidades: number }> = {}
+  vendasFiltradas.value.forEach(v => {
+    const chave = v.produto.trim().toLowerCase()
+    if (!map[chave]) map[chave] = { nome: v.produto.trim(), total: 0, unidades: 0 }
+    map[chave]!.total += v.quantidade * v.valorUnit
+    map[chave]!.unidades += v.quantidade
   })
+  const total = totalVendas.value || 1
+  return Object.values(map)
+    .map(d => ({ ...d, percentual: (d.total / total) * 100 }))
+    .sort((a, b) => b.total - a.total)
+})
 
   return {
     store, tipoRelatorio, filtro, periodoAtivo, periodos, aplicarPeriodo,
