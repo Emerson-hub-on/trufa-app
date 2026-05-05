@@ -9,130 +9,379 @@
       </div>
 
       <div class="p-4 sm:p-5 flex flex-col gap-3">
-        <!-- Período rápido -->
-        <div class="flex flex-wrap gap-2">
-          <button v-for="p in periodos" :key="p.label" @click="aplicarPeriodo(p)"
-            :class="periodoAtivo === p.label ? 'bg-rose-400 text-white' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'"
-            class="text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
-            {{ p.label }}
-          </button>
+
+        <!-- Tipo de relatório -->
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-bold text-stone-500 whitespace-nowrap">Relatório</label>
+          <select v-model="tipoRelatorio"
+            class="border border-pink-200 rounded-xl px-3 py-2 text-xs sm:text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-rose-300 font-semibold text-stone-700">
+            <option value="vendas">💸 Vendas</option>
+            <option value="compras">📦 Compras</option>
+            <option value="rendimento">📈 Rendimento</option>
+            <option value="sabores">🍫 Sabores</option>
+            <option value="fichas">🧾 Ficha Técnica</option>
+          </select>
         </div>
 
-        <!-- Datas customizadas -->
-        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          <div class="flex items-center gap-2 flex-1 w-full">
-            <label class="text-xs font-bold text-stone-500 whitespace-nowrap">De</label>
-            <input v-model="filtro.de" type="date"
-              class="border border-pink-200 rounded-xl px-3 py-2 text-xs sm:text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-rose-300" />
+        <!-- Período rápido (não exibe para fichas e sabores) -->
+        <template v-if="tipoRelatorio !== 'fichas' && tipoRelatorio !== 'sabores'">
+          <div class="flex flex-wrap gap-2">
+            <button v-for="p in periodos" :key="p.label" @click="aplicarPeriodo(p)"
+              :class="periodoAtivo === p.label ? 'bg-rose-400 text-white' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'"
+              class="text-xs font-bold px-3 py-1.5 rounded-full transition-colors">
+              {{ p.label }}
+            </button>
           </div>
-          <div class="flex items-center gap-2 flex-1 w-full">
-            <label class="text-xs font-bold text-stone-500 whitespace-nowrap">Até</label>
-            <input v-model="filtro.ate" type="date"
-              class="border border-pink-200 rounded-xl px-3 py-2 text-xs sm:text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-rose-300" />
-          </div>
-          <div class="flex items-center gap-2 w-full sm:w-auto">
-            <label class="text-xs font-bold text-stone-500 whitespace-nowrap">Sabor</label>
-            <select v-model="filtro.sabor"
-              class="border border-pink-200 rounded-xl px-3 py-2 text-xs sm:text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-rose-300">
-              <option value="">Todos</option>
-              <option v-for="s in store.sabores" :key="s.id" :value="s.nome">{{ s.nome }}</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Resumo -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-3 sm:p-4">
-        <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-rose-400 mb-1">💰 Total</p>
-        <p class="text-base sm:text-xl font-black text-rose-600">{{ formatCurrency(totalVendas) }}</p>
-      </div>
-      <div class="bg-gradient-to-br from-fuchsia-50 to-pink-50 border border-fuchsia-200 rounded-2xl p-3 sm:p-4">
-        <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-1">📦 Unidades</p>
-        <p class="text-base sm:text-xl font-black text-fuchsia-600">{{ totalUnidades }}</p>
-      </div>
-      <div class="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-200 rounded-2xl p-3 sm:p-4">
-        <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-orange-400 mb-1">🧾 Registros</p>
-        <p class="text-base sm:text-xl font-black text-orange-500">{{ vendasFiltradas.length }}</p>
-      </div>
-      <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-3 sm:p-4">
-        <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1">📈 Ticket médio</p>
-        <p class="text-base sm:text-xl font-black text-emerald-600">{{ formatCurrency(ticketMedio) }}</p>
-      </div>
-    </div>
-
-    <!-- Tabela + exportação -->
-    <div class="bg-white border border-pink-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
-      <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50 flex items-center justify-between gap-2 flex-wrap">
-        <h2 class="font-black text-rose-700 text-xs sm:text-sm uppercase tracking-wide">📋 Vendas</h2>
-        <div class="flex gap-2">
-          <button @click="exportarExcel"
-            class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
-            <span>📊</span> Excel
-          </button>
-          <button @click="exportarPDF"
-            class="flex items-center gap-1.5 bg-rose-400 hover:bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
-            <span>📄</span> PDF
-          </button>
-        </div>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table class="w-full text-xs sm:text-sm" id="tabela-relatorio">
-          <thead>
-            <tr class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-stone-500 border-b border-pink-50 bg-rose-50/40">
-              <th class="text-left px-4 sm:px-5 py-3">Data</th>
-              <th class="text-left px-4 sm:px-5 py-3">Produto</th>
-              <th class="text-right px-4 sm:px-5 py-3">Qtd</th>
-              <th class="text-right px-4 sm:px-5 py-3">Unit.</th>
-              <th class="text-right px-4 sm:px-5 py-3">Total</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-pink-50">
-            <tr v-if="vendasFiltradas.length === 0">
-              <td colspan="5" class="text-center py-10 text-stone-400 text-xs">Nenhuma venda no período selecionado.</td>
-            </tr>
-            <tr v-for="v in vendasFiltradas" :key="v.id" class="hover:bg-rose-50/40 transition-colors">
-              <td class="px-4 sm:px-5 py-2.5 text-stone-600">{{ formatDateBR(v.data) }}</td>
-              <td class="px-4 sm:px-5 py-2.5 font-semibold text-stone-700">{{ v.produto }}</td>
-              <td class="px-4 sm:px-5 py-2.5 text-right text-stone-600">{{ v.quantidade }}</td>
-              <td class="px-4 sm:px-5 py-2.5 text-right text-stone-600">{{ formatCurrency(v.valorUnit) }}</td>
-              <td class="px-4 sm:px-5 py-2.5 text-right font-black text-rose-500">{{ formatCurrency(v.quantidade * v.valorUnit) }}</td>
-            </tr>
-          </tbody>
-          <tfoot v-if="vendasFiltradas.length > 0">
-            <tr class="border-t-2 border-rose-200 bg-rose-50/60">
-              <td colspan="4" class="px-4 sm:px-5 py-3 font-black text-rose-700 text-xs sm:text-sm uppercase tracking-wide">Total</td>
-              <td class="px-4 sm:px-5 py-3 text-right font-black text-rose-600 text-sm sm:text-base">{{ formatCurrency(totalVendas) }}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-
-    <!-- Por sabor -->
-    <div class="bg-white border border-pink-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
-      <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50">
-        <h2 class="font-black text-rose-700 text-xs sm:text-sm uppercase tracking-wide">🍫 Por Sabor</h2>
-      </div>
-      <div class="divide-y divide-pink-50">
-        <div v-if="porSabor.length === 0" class="text-center py-8 text-stone-400 text-xs">Sem dados no período.</div>
-        <div v-for="s in porSabor" :key="s.nome" class="px-4 sm:px-5 py-3 flex items-center gap-3">
-          <div class="flex-1 min-w-0">
-            <p class="font-bold text-stone-700 text-xs sm:text-sm truncate">{{ s.nome }}</p>
-            <div class="mt-1.5 h-1.5 bg-pink-100 rounded-full overflow-hidden">
-              <div class="h-full bg-gradient-to-r from-rose-400 to-pink-400 rounded-full transition-all duration-500"
-                :style="{ width: `${s.percentual}%` }" />
+          <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <div class="flex items-center gap-2 flex-1 w-full">
+              <label class="text-xs font-bold text-stone-500 whitespace-nowrap">De</label>
+              <input v-model="filtro.de" type="date"
+                class="border border-pink-200 rounded-xl px-3 py-2 text-xs sm:text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-rose-300" />
+            </div>
+            <div class="flex items-center gap-2 flex-1 w-full">
+              <label class="text-xs font-bold text-stone-500 whitespace-nowrap">Até</label>
+              <input v-model="filtro.ate" type="date"
+                class="border border-pink-200 rounded-xl px-3 py-2 text-xs sm:text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-rose-300" />
+            </div>
+            <!-- Filtro sabor só para vendas -->
+            <div v-if="tipoRelatorio === 'vendas'" class="flex items-center gap-2 w-full sm:w-auto">
+              <label class="text-xs font-bold text-stone-500 whitespace-nowrap">Sabor</label>
+              <select v-model="filtro.sabor"
+                class="border border-pink-200 rounded-xl px-3 py-2 text-xs sm:text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-rose-300">
+                <option value="">Todos</option>
+                <option v-for="s in store.sabores" :key="s.id" :value="s.nome">{{ s.nome }}</option>
+              </select>
             </div>
           </div>
-          <div class="text-right flex-shrink-0">
-            <p class="font-black text-rose-500 text-xs sm:text-sm">{{ formatCurrency(s.total) }}</p>
-            <p class="text-[10px] text-stone-400">{{ s.unidades }} un · {{ s.percentual.toFixed(0) }}%</p>
+        </template>
+      </div>
+    </div>
+
+    <!-- ── VENDAS ───────────────────────────────────────────── -->
+    <template v-if="tipoRelatorio === 'vendas'">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-3 sm:p-4">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-rose-400 mb-1">💰 Total</p>
+          <p class="text-base sm:text-xl font-black text-rose-600">{{ formatCurrency(totalVendas) }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-fuchsia-50 to-pink-50 border border-fuchsia-200 rounded-2xl p-3 sm:p-4">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-1">📦 Unidades</p>
+          <p class="text-base sm:text-xl font-black text-fuchsia-600">{{ totalUnidades }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-200 rounded-2xl p-3 sm:p-4">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-orange-400 mb-1">🧾 Registros</p>
+          <p class="text-base sm:text-xl font-black text-orange-500">{{ vendasFiltradas.length }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-3 sm:p-4">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1">📈 Ticket médio</p>
+          <p class="text-base sm:text-xl font-black text-emerald-600">{{ formatCurrency(ticketMedio) }}</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-pink-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
+        <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50 flex items-center justify-between gap-2 flex-wrap">
+          <h2 class="font-black text-rose-700 text-xs sm:text-sm uppercase tracking-wide">📋 Vendas</h2>
+          <div class="flex gap-2">
+            <button @click="exportarExcel('vendas')" class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
+              📊 Excel
+            </button>
+            <button @click="exportarPDF('vendas')" class="flex items-center gap-1.5 bg-rose-400 hover:bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
+              📄 PDF
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-stone-500 border-b border-pink-50 bg-rose-50/40">
+                <th class="text-left px-4 sm:px-5 py-3">Data</th>
+                <th class="text-left px-4 sm:px-5 py-3">Produto</th>
+                <th class="text-right px-4 sm:px-5 py-3">Qtd</th>
+                <th class="text-right px-4 sm:px-5 py-3">Unit.</th>
+                <th class="text-right px-4 sm:px-5 py-3">Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-pink-50">
+              <tr v-if="vendasFiltradas.length === 0">
+                <td colspan="5" class="text-center py-10 text-stone-400 text-xs">Nenhuma venda no período.</td>
+              </tr>
+              <tr v-for="v in vendasFiltradas" :key="v.id" class="hover:bg-rose-50/40 transition-colors">
+                <td class="px-4 sm:px-5 py-2.5 text-stone-600">{{ formatDateBR(v.data) }}</td>
+                <td class="px-4 sm:px-5 py-2.5 font-semibold text-stone-700">{{ v.produto }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-right text-stone-600">{{ v.quantidade }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-right text-stone-600">{{ formatCurrency(v.valorUnit) }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-right font-black text-rose-500">{{ formatCurrency(v.quantidade * v.valorUnit) }}</td>
+              </tr>
+            </tbody>
+            <tfoot v-if="vendasFiltradas.length > 0">
+              <tr class="border-t-2 border-rose-200 bg-rose-50/60">
+                <td colspan="4" class="px-4 sm:px-5 py-3 font-black text-rose-700 text-xs uppercase tracking-wide">Total</td>
+                <td class="px-4 sm:px-5 py-3 text-right font-black text-rose-600">{{ formatCurrency(totalVendas) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Por sabor -->
+      <div class="bg-white border border-pink-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
+        <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50">
+          <h2 class="font-black text-rose-700 text-xs sm:text-sm uppercase tracking-wide">🍫 Por Sabor</h2>
+        </div>
+        <div class="divide-y divide-pink-50">
+          <div v-if="porSabor.length === 0" class="text-center py-8 text-stone-400 text-xs">Sem dados no período.</div>
+          <div v-for="s in porSabor" :key="s.nome" class="px-4 sm:px-5 py-3 flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-stone-700 text-xs sm:text-sm truncate">{{ s.nome }}</p>
+              <div class="mt-1.5 h-1.5 bg-pink-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-rose-400 to-pink-400 rounded-full transition-all duration-500"
+                  :style="{ width: `${s.percentual}%` }" />
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <p class="font-black text-rose-500 text-xs sm:text-sm">{{ formatCurrency(s.total) }}</p>
+              <p class="text-[10px] text-stone-400">{{ s.unidades }} un · {{ s.percentual.toFixed(0) }}%</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
+
+    <!-- ── COMPRAS ──────────────────────────────────────────── -->
+    <template v-if="tipoRelatorio === 'compras'">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-200 rounded-2xl p-3 sm:p-4">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-orange-400 mb-1">💸 Total Gasto</p>
+          <p class="text-base sm:text-xl font-black text-orange-500">{{ formatCurrency(totalCompras) }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-3 sm:p-4">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-rose-400 mb-1">🧾 Registros</p>
+          <p class="text-base sm:text-xl font-black text-rose-600">{{ comprasFiltradas.length }}</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-pink-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
+        <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50 flex items-center justify-between gap-2 flex-wrap">
+          <h2 class="font-black text-rose-700 text-xs sm:text-sm uppercase tracking-wide">📦 Compras</h2>
+          <div class="flex gap-2">
+            <button @click="exportarExcel('compras')" class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
+              📊 Excel
+            </button>
+            <button @click="exportarPDF('compras')" class="flex items-center gap-1.5 bg-rose-400 hover:bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
+              📄 PDF
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-stone-500 border-b border-pink-50 bg-rose-50/40">
+                <th class="text-left px-4 sm:px-5 py-3">Data</th>
+                <th class="text-left px-4 sm:px-5 py-3">Item</th>
+                <th class="text-left px-4 sm:px-5 py-3">Qtd</th>
+                <th class="text-right px-4 sm:px-5 py-3">Custo</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-pink-50">
+              <tr v-if="comprasFiltradas.length === 0">
+                <td colspan="4" class="text-center py-10 text-stone-400 text-xs">Nenhuma compra no período.</td>
+              </tr>
+              <tr v-for="c in comprasFiltradas" :key="c.id" class="hover:bg-rose-50/40 transition-colors">
+                <td class="px-4 sm:px-5 py-2.5 text-stone-600">{{ formatDateBR(c.data) }}</td>
+                <td class="px-4 sm:px-5 py-2.5 font-semibold text-stone-700">{{ c.item }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-stone-600">{{ c.quantidade }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-right font-black text-orange-500">{{ formatCurrency(c.custo) }}</td>
+              </tr>
+            </tbody>
+            <tfoot v-if="comprasFiltradas.length > 0">
+              <tr class="border-t-2 border-orange-200 bg-orange-50/60">
+                <td colspan="3" class="px-4 sm:px-5 py-3 font-black text-orange-700 text-xs uppercase tracking-wide">Total</td>
+                <td class="px-4 sm:px-5 py-3 text-right font-black text-orange-600">{{ formatCurrency(totalCompras) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── RENDIMENTO ───────────────────────────────────────── -->
+    <template v-if="tipoRelatorio === 'rendimento'">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div class="bg-gradient-to-br from-fuchsia-50 to-pink-50 border border-fuchsia-200 rounded-2xl p-3 sm:p-4">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-1">📈 Vendas</p>
+          <p class="text-base sm:text-xl font-black text-fuchsia-600">{{ formatCurrency(totalVendas) }}</p>
+        </div>
+        <div class="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-200 rounded-2xl p-3 sm:p-4">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-orange-400 mb-1">📉 Compras</p>
+          <p class="text-base sm:text-xl font-black text-orange-500">{{ formatCurrency(totalCompras) }}</p>
+        </div>
+        <div :class="rendimento >= 0 ? 'from-emerald-50 to-teal-50 border-emerald-200' : 'from-red-50 to-rose-50 border-red-200'"
+          class="col-span-2 sm:col-span-1 bg-gradient-to-br rounded-2xl p-3 sm:p-4 border">
+          <p :class="rendimento >= 0 ? 'text-emerald-500' : 'text-red-400'"
+            class="text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">
+            {{ rendimento >= 0 ? '💰 Lucro' : '⚠️ Prejuízo' }}
+          </p>
+          <p :class="rendimento >= 0 ? 'text-emerald-600' : 'text-red-500'"
+            class="text-base sm:text-xl font-black">{{ formatCurrency(rendimento) }}</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-pink-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
+        <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50 flex items-center justify-between gap-2 flex-wrap">
+          <h2 class="font-black text-rose-700 text-xs sm:text-sm uppercase tracking-wide">📈 Rendimento</h2>
+          <div class="flex gap-2">
+            <button @click="exportarExcel('rendimento')" class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
+              📊 Excel
+            </button>
+            <button @click="exportarPDF('rendimento')" class="flex items-center gap-1.5 bg-rose-400 hover:bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
+              📄 PDF
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-stone-500 border-b border-pink-50 bg-rose-50/40">
+                <th class="text-left px-4 sm:px-5 py-3">Tipo</th>
+                <th class="text-left px-4 sm:px-5 py-3">Descrição</th>
+                <th class="text-left px-4 sm:px-5 py-3">Data</th>
+                <th class="text-right px-4 sm:px-5 py-3">Valor</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-pink-50">
+              <tr v-if="itensRendimento.length === 0">
+                <td colspan="4" class="text-center py-10 text-stone-400 text-xs">Sem dados no período.</td>
+              </tr>
+              <tr v-for="(item, i) in itensRendimento" :key="i" class="hover:bg-rose-50/40 transition-colors">
+                <td class="px-4 sm:px-5 py-2.5">
+                  <span :class="item.tipo === 'Venda' ? 'bg-fuchsia-100 text-fuchsia-700' : 'bg-orange-100 text-orange-600'"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {{ item.tipo === 'Venda' ? '📈 Venda' : '📉 Compra' }}
+                  </span>
+                </td>
+                <td class="px-4 sm:px-5 py-2.5 font-semibold text-stone-700">{{ item.descricao }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-stone-600">{{ formatDateBR(item.data) }}</td>
+                <td :class="item.tipo === 'Venda' ? 'text-fuchsia-600' : 'text-orange-500'"
+                  class="px-4 sm:px-5 py-2.5 text-right font-black">
+                  {{ item.tipo === 'Venda' ? '+' : '-' }}{{ formatCurrency(item.valor) }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot v-if="itensRendimento.length > 0">
+              <tr :class="rendimento >= 0 ? 'border-emerald-200 bg-emerald-50/60' : 'border-red-200 bg-red-50/60'"
+                class="border-t-2">
+                <td colspan="3" :class="rendimento >= 0 ? 'text-emerald-700' : 'text-red-600'"
+                  class="px-4 sm:px-5 py-3 font-black text-xs uppercase tracking-wide">
+                  {{ rendimento >= 0 ? 'Lucro' : 'Prejuízo' }}
+                </td>
+                <td :class="rendimento >= 0 ? 'text-emerald-600' : 'text-red-500'"
+                  class="px-4 sm:px-5 py-3 text-right font-black">{{ formatCurrency(rendimento) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── SABORES ──────────────────────────────────────────── -->
+    <template v-if="tipoRelatorio === 'sabores'">
+      <div class="bg-white border border-pink-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
+        <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50 flex items-center justify-between gap-2 flex-wrap">
+          <h2 class="font-black text-rose-700 text-xs sm:text-sm uppercase tracking-wide">🍫 Sabores</h2>
+          <div class="flex gap-2">
+            <button @click="exportarExcel('sabores')" class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
+              📊 Excel
+            </button>
+            <button @click="exportarPDF('sabores')" class="flex items-center gap-1.5 bg-rose-400 hover:bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full transition-colors shadow-sm">
+              📄 PDF
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-stone-500 border-b border-pink-50 bg-rose-50/40">
+                <th class="text-left px-4 sm:px-5 py-3">Nome</th>
+                <th class="text-left px-4 sm:px-5 py-3">Descrição</th>
+                <th class="text-right px-4 sm:px-5 py-3">Preço</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-pink-50">
+              <tr v-if="store.sabores.length === 0">
+                <td colspan="3" class="text-center py-10 text-stone-400 text-xs">Nenhum sabor cadastrado.</td>
+              </tr>
+              <tr v-for="s in store.sabores" :key="s.id" class="hover:bg-rose-50/40 transition-colors">
+                <td class="px-4 sm:px-5 py-2.5 font-semibold text-stone-700">{{ s.nome }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-stone-500">{{ s.descricao || '—' }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-right font-black text-rose-500">{{ formatCurrency(s.preco) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </template>
+
+    <!-- ── FICHAS TÉCNICAS ──────────────────────────────────── -->
+    <template v-if="tipoRelatorio === 'fichas'">
+      <div v-for="f in store.fichasTecnicas" :key="f.id"
+        class="bg-white border border-pink-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm">
+        <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-rose-50 flex items-center justify-between">
+          <div>
+            <h2 class="font-black text-rose-700 text-xs sm:text-sm">🧾 {{ f.nome }}</h2>
+            <p class="text-[10px] text-stone-400 mt-0.5">Produção: {{ f.producao }} unidades</p>
+          </div>
+          <div>
+            <p class="text-xs font-black text-rose-500">
+              Custo total: {{ formatCurrency(f.ingredientes.reduce((a, i) => a + i.custo, 0)) }}
+            </p>
+            <p class="text-[10px] text-stone-400 text-right">
+              Por unidade: {{ formatCurrency(f.ingredientes.reduce((a, i) => a + i.custo, 0) / (f.producao || 1)) }}
+            </p>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs sm:text-sm">
+            <thead>
+              <tr class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-stone-500 border-b border-pink-50 bg-rose-50/40">
+                <th class="text-left px-4 sm:px-5 py-3">Ingrediente</th>
+                <th class="text-left px-4 sm:px-5 py-3">Quantidade</th>
+                <th class="text-right px-4 sm:px-5 py-3">Custo</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-pink-50">
+              <tr v-for="ing in f.ingredientes" :key="ing.nome" class="hover:bg-rose-50/40 transition-colors">
+                <td class="px-4 sm:px-5 py-2.5 font-semibold text-stone-700">{{ ing.nome }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-stone-600">{{ ing.quantidade }}</td>
+                <td class="px-4 sm:px-5 py-2.5 text-right font-black text-rose-500">{{ formatCurrency(ing.custo) }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="border-t-2 border-rose-200 bg-rose-50/60">
+                <td colspan="2" class="px-4 sm:px-5 py-3 font-black text-rose-700 text-xs uppercase tracking-wide">Total</td>
+                <td class="px-4 sm:px-5 py-3 text-right font-black text-rose-600">
+                  {{ formatCurrency(f.ingredientes.reduce((a, i) => a + i.custo, 0)) }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div v-if="store.fichasTecnicas.length === 0"
+        class="bg-white border border-pink-100 rounded-2xl p-10 text-center text-stone-400 text-xs shadow-sm">
+        Nenhuma ficha técnica cadastrada.
+      </div>
+
+      <!-- Exportar fichas -->
+      <div class="flex justify-end gap-2">
+        <button @click="exportarExcel('fichas')" class="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full transition-colors shadow-sm">
+          📊 Excel
+        </button>
+        <button @click="exportarPDF('fichas')" class="flex items-center gap-1.5 bg-rose-400 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2 rounded-full transition-colors shadow-sm">
+          📄 PDF
+        </button>
+      </div>
+    </template>
 
   </div>
 </template>
@@ -144,9 +393,13 @@ definePageMeta({ layout: 'default' })
 
 const store = useTrufaStore()
 
-// ── Filtros ─────────────────────────────────────────────────
+// ── Tipo de relatório ────────────────────────────────────────
+const tipoRelatorio = ref('vendas')
+
+// ── Filtros ──────────────────────────────────────────────────
 const hoje = new Date()
 const fmt = (d: Date): string => d.toISOString().split('T')[0] ?? ''
+
 const filtro = reactive<{ de: string; ate: string; sabor: string }>({
   de: fmt(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
   ate: fmt(hoje),
@@ -156,18 +409,10 @@ const filtro = reactive<{ de: string; ate: string; sabor: string }>({
 const periodoAtivo = ref('Este mês')
 
 const periodos = [
-  {
-    label: 'Hoje',
-    de: () => fmt(hoje),
-    ate: () => fmt(hoje),
-  },
+  { label: 'Hoje', de: () => fmt(hoje), ate: () => fmt(hoje) },
   {
     label: 'Esta semana',
-    de: () => {
-      const d = new Date(hoje)
-      d.setDate(hoje.getDate() - hoje.getDay())
-      return fmt(d)
-    },
+    de: () => { const d = new Date(hoje); d.setDate(hoje.getDate() - hoje.getDay()); return fmt(d) },
     ate: () => fmt(hoje),
   },
   {
@@ -180,11 +425,7 @@ const periodos = [
     de: () => fmt(new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1)),
     ate: () => fmt(new Date(hoje.getFullYear(), hoje.getMonth(), 0)),
   },
-  {
-    label: 'Tudo',
-    de: () => '2000-01-01',
-    ate: () => fmt(hoje),
-  },
+  { label: 'Tudo', de: () => '2000-01-01', ate: () => fmt(hoje) },
 ]
 
 function aplicarPeriodo(p: typeof periodos[0]) {
@@ -193,26 +434,47 @@ function aplicarPeriodo(p: typeof periodos[0]) {
   periodoAtivo.value = p.label
 }
 
-// ── Dados filtrados ─────────────────────────────────────────
-const vendasFiltradas = computed(() => {
-  return store.vendas.filter(v => {
+// ── Dados filtrados ──────────────────────────────────────────
+const vendasFiltradas = computed(() =>
+  store.vendas.filter(v => {
     const dentroData = v.data >= filtro.de && v.data <= filtro.ate
     const dentroSabor = !filtro.sabor || v.produto === filtro.sabor
     return dentroData && dentroSabor
   })
-})
+)
+
+const comprasFiltradas = computed(() =>
+  store.compras.filter(c => c.data >= filtro.de && c.data <= filtro.ate)
+)
+
+const itensRendimento = computed(() => [
+  ...vendasFiltradas.value.map(v => ({
+    tipo: 'Venda',
+    descricao: `${v.produto} (${v.quantidade}x)`,
+    data: v.data,
+    valor: v.quantidade * v.valorUnit,
+  })),
+  ...comprasFiltradas.value.map(c => ({
+    tipo: 'Compra',
+    descricao: c.item,
+    data: c.data,
+    valor: c.custo,
+  })),
+].sort((a, b) => a.data.localeCompare(b.data)))
 
 const totalVendas = computed(() =>
   vendasFiltradas.value.reduce((acc, v) => acc + v.quantidade * v.valorUnit, 0)
 )
-
+const totalCompras = computed(() =>
+  comprasFiltradas.value.reduce((acc, c) => acc + c.custo, 0)
+)
 const totalUnidades = computed(() =>
   vendasFiltradas.value.reduce((acc, v) => acc + v.quantidade, 0)
 )
-
 const ticketMedio = computed(() =>
   vendasFiltradas.value.length > 0 ? totalVendas.value / vendasFiltradas.value.length : 0
 )
+const rendimento = computed(() => totalVendas.value - totalCompras.value)
 
 const porSabor = computed(() => {
   const map: Record<string, { total: number; unidades: number }> = {}
@@ -227,120 +489,181 @@ const porSabor = computed(() => {
     .sort((a, b) => b.total - a.total)
 })
 
-// ── Formatação ──────────────────────────────────────────────
+// ── Formatação ───────────────────────────────────────────────
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
-
 function formatDateBR(d: string) {
   if (!d) return ''
   const [y, m, day] = d.split('-')
   return `${day}/${m}/${y}`
 }
 
-// ── Exportar Excel ──────────────────────────────────────────
-async function exportarExcel() {
+// ── Exportar Excel ───────────────────────────────────────────
+async function exportarExcel(tipo: string) {
   const XLSX = await import('xlsx')
 
-  const dados = vendasFiltradas.value.map(v => ({
-    Data: formatDateBR(v.data),
-    Produto: v.produto,
-    Quantidade: v.quantidade,
-    'Valor Unit. (R$)': v.valorUnit,
-    'Total (R$)': v.quantidade * v.valorUnit,
-  }))
+  let dados: any[] = []
+  let nomePlanilha = 'Relatório'
+  let nomeArquivo = `relatorio-${tipo}`
 
-  // Linha de total
-  dados.push({
-    Data: '',
-    Produto: 'TOTAL',
-    Quantidade: totalUnidades.value,
-    'Valor Unit. (R$)': 0,
-    'Total (R$)': totalVendas.value,
-  })
+  if (tipo === 'vendas') {
+    nomePlanilha = 'Vendas'
+    dados = vendasFiltradas.value.map(v => ({
+      Data: formatDateBR(v.data), Produto: v.produto,
+      Quantidade: v.quantidade, 'Valor Unit. (R$)': v.valorUnit,
+      'Total (R$)': v.quantidade * v.valorUnit,
+    }))
+    dados.push({ Data: '', Produto: 'TOTAL', Quantidade: totalUnidades.value, 'Valor Unit. (R$)': 0, 'Total (R$)': totalVendas.value })
+  } else if (tipo === 'compras') {
+    nomePlanilha = 'Compras'
+    dados = comprasFiltradas.value.map(c => ({
+      Data: formatDateBR(c.data), Item: c.item,
+      Quantidade: c.quantidade, 'Custo (R$)': c.custo,
+    }))
+    dados.push({ Data: '', Item: 'TOTAL', Quantidade: '', 'Custo (R$)': totalCompras.value })
+  } else if (tipo === 'rendimento') {
+    nomePlanilha = 'Rendimento'
+    dados = itensRendimento.value.map(i => ({
+      Tipo: i.tipo, Descrição: i.descricao,
+      Data: formatDateBR(i.data),
+      'Valor (R$)': i.tipo === 'Venda' ? i.valor : -i.valor,
+    }))
+    dados.push({ Tipo: '', Descrição: 'RESULTADO', Data: '', 'Valor (R$)': rendimento.value })
+  } else if (tipo === 'sabores') {
+    nomePlanilha = 'Sabores'
+    dados = store.sabores.map(s => ({
+      Nome: s.nome, Descrição: s.descricao, 'Preço (R$)': s.preco,
+    }))
+  } else if (tipo === 'fichas') {
+    nomePlanilha = 'Fichas Técnicas'
+    store.fichasTecnicas.forEach(f => {
+      dados.push({ Ficha: f.nome, Ingrediente: '', Quantidade: '', 'Custo (R$)': '' })
+      f.ingredientes.forEach(i => {
+        dados.push({ Ficha: '', Ingrediente: i.nome, Quantidade: i.quantidade, 'Custo (R$)': i.custo })
+      })
+      dados.push({ Ficha: '', Ingrediente: 'TOTAL', Quantidade: `${f.producao} unidades`, 'Custo (R$)': f.ingredientes.reduce((a, i) => a + i.custo, 0) })
+      dados.push({})
+    })
+  }
 
+  nomeArquivo += `-${filtro.de}-${filtro.ate}.xlsx`
   const ws = XLSX.utils.json_to_sheet(dados)
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, 'Vendas')
-  XLSX.writeFile(wb, `relatorio-vendas-${filtro.de}-${filtro.ate}.xlsx`)
+  XLSX.utils.book_append_sheet(wb, ws, nomePlanilha)
+  XLSX.writeFile(wb, nomeArquivo)
 }
 
-// ── Exportar PDF ────────────────────────────────────────────
-async function exportarPDF() {
+// ── Exportar PDF ─────────────────────────────────────────────
+async function exportarPDF(tipo: string) {
   const { default: jsPDF } = await import('jspdf' as any)
   const { default: autoTable } = await import('jspdf-autotable' as any)
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const titulos: Record<string, string> = {
+    vendas: 'Relatório de Vendas', compras: 'Relatório de Compras',
+    rendimento: 'Relatório de Rendimento', sabores: 'Catálogo de Sabores',
+    fichas: 'Fichas Técnicas',
+  }
 
   // Cabeçalho
-  doc.setFillColor(251, 113, 133) // rose-400
+  doc.setFillColor(251, 113, 133)
   doc.rect(0, 0, 210, 28, 'F')
   doc.setTextColor(255, 255, 255)
-  doc.setFontSize(16)
+  doc.setFontSize(15)
   doc.setFont('helvetica', 'bold')
-  doc.text('🍫 Trufa Manager — Relatório de Vendas', 14, 12)
+  doc.text(`🍫 Trufa Manager — ${titulos[tipo]}`, 14, 12)
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Período: ${formatDateBR(filtro.de)} até ${formatDateBR(filtro.ate)}${filtro.sabor ? ' · Sabor: ' + filtro.sabor : ''}`, 14, 21)
+  if (tipo !== 'fichas' && tipo !== 'sabores') {
+    doc.text(`Período: ${formatDateBR(filtro.de)} até ${formatDateBR(filtro.ate)}`, 14, 21)
+  }
 
-  // Resumo
-  doc.setTextColor(60, 60, 60)
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'bold')
-  doc.text(`Total: ${formatCurrency(totalVendas.value)}   Unidades: ${totalUnidades.value}   Registros: ${vendasFiltradas.value.length}   Ticket médio: ${formatCurrency(ticketMedio.value)}`, 14, 35)
+  let startY = 35
 
-  // Tabela de vendas
-  autoTable(doc, {
-    startY: 40,
-    head: [['Data', 'Produto', 'Qtd', 'Unit.', 'Total']],
-    body: [
-      ...vendasFiltradas.value.map(v => [
-        formatDateBR(v.data),
-        v.produto,
-        v.quantidade,
-        formatCurrency(v.valorUnit),
-        formatCurrency(v.quantidade * v.valorUnit),
-      ]),
-      ['', 'TOTAL', totalUnidades.value, '', formatCurrency(totalVendas.value)],
-    ],
-    headStyles: { fillColor: [251, 113, 133], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-    bodyStyles: { fontSize: 8 },
-    footStyles: { fillColor: [255, 241, 242], textColor: [190, 18, 60], fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [255, 247, 248] },
-    columnStyles: {
-      0: { cellWidth: 22 },
-      2: { halign: 'right', cellWidth: 14 },
-      3: { halign: 'right', cellWidth: 26 },
-      4: { halign: 'right', cellWidth: 28 },
-    },
-  })
+  if (tipo === 'vendas') {
+    doc.setTextColor(60, 60, 60)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Total: ${formatCurrency(totalVendas.value)}   Unidades: ${totalUnidades.value}   Ticket médio: ${formatCurrency(ticketMedio.value)}`, 14, startY)
+    startY += 8
+    autoTable(doc, {
+      startY,
+      head: [['Data', 'Produto', 'Qtd', 'Unit.', 'Total']],
+      body: [
+        ...vendasFiltradas.value.map(v => [formatDateBR(v.data), v.produto, v.quantidade, formatCurrency(v.valorUnit), formatCurrency(v.quantidade * v.valorUnit)]),
+        ['', 'TOTAL', totalUnidades.value, '', formatCurrency(totalVendas.value)],
+      ],
+      headStyles: { fillColor: [251, 113, 133], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [255, 247, 248] },
+      columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+    })
+  } else if (tipo === 'compras') {
+    doc.setTextColor(60, 60, 60)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Total gasto: ${formatCurrency(totalCompras.value)}   Registros: ${comprasFiltradas.value.length}`, 14, startY)
+    startY += 8
+    autoTable(doc, {
+      startY,
+      head: [['Data', 'Item', 'Quantidade', 'Custo']],
+      body: [
+        ...comprasFiltradas.value.map(c => [formatDateBR(c.data), c.item, c.quantidade, formatCurrency(c.custo)]),
+        ['', 'TOTAL', '', formatCurrency(totalCompras.value)],
+      ],
+      headStyles: { fillColor: [251, 113, 133], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [255, 247, 248] },
+      columnStyles: { 3: { halign: 'right' } },
+    })
+  } else if (tipo === 'rendimento') {
+    doc.setTextColor(60, 60, 60)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Vendas: ${formatCurrency(totalVendas.value)}   Compras: ${formatCurrency(totalCompras.value)}   Resultado: ${formatCurrency(rendimento.value)}`, 14, startY)
+    startY += 8
+    autoTable(doc, {
+      startY,
+      head: [['Tipo', 'Descrição', 'Data', 'Valor']],
+      body: [
+        ...itensRendimento.value.map(i => [i.tipo, i.descricao, formatDateBR(i.data), (i.tipo === 'Venda' ? '+' : '-') + formatCurrency(i.valor)]),
+        ['', 'RESULTADO', '', formatCurrency(rendimento.value)],
+      ],
+      headStyles: { fillColor: [251, 113, 133], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [255, 247, 248] },
+      columnStyles: { 3: { halign: 'right' } },
+    })
+  } else if (tipo === 'sabores') {
+    autoTable(doc, {
+      startY,
+      head: [['Nome', 'Descrição', 'Preço']],
+      body: store.sabores.map(s => [s.nome, s.descricao || '—', formatCurrency(s.preco)]),
+      headStyles: { fillColor: [251, 113, 133], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [255, 247, 248] },
+      columnStyles: { 2: { halign: 'right' } },
+    })
+  } else if (tipo === 'fichas') {
+    for (const f of store.fichasTecnicas) {
+      const custoTotal = f.ingredientes.reduce((a, i) => a + i.custo, 0)
+      autoTable(doc, {
+        startY,
+        head: [[{ content: `${f.nome} — ${f.producao} unidades | Custo total: ${formatCurrency(custoTotal)} | Por unidade: ${formatCurrency(custoTotal / (f.producao || 1))}`, colSpan: 3 }]],
+        body: [
+          ...f.ingredientes.map(i => [i.nome, i.quantidade, formatCurrency(i.custo)]),
+          ['TOTAL', `${f.producao} un.`, formatCurrency(custoTotal)],
+        ],
+        headStyles: { fillColor: [251, 113, 133], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        alternateRowStyles: { fillColor: [255, 247, 248] },
+        columnStyles: { 2: { halign: 'right' } },
+      })
+      startY = (doc as any).lastAutoTable.finalY + 8
+    }
+  }
 
-  // Por sabor
-  const finalY = (doc as any).lastAutoTable.finalY + 8
-  doc.setFontSize(10)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(190, 18, 60)
-  doc.text('Por Sabor', 14, finalY)
-
-  autoTable(doc, {
-    startY: finalY + 4,
-    head: [['Sabor', 'Unidades', 'Total', '%']],
-    body: porSabor.value.map(s => [
-      s.nome,
-      s.unidades,
-      formatCurrency(s.total),
-      `${s.percentual.toFixed(1)}%`,
-    ]),
-    headStyles: { fillColor: [251, 113, 133], textColor: 255, fontStyle: 'bold', fontSize: 8 },
-    bodyStyles: { fontSize: 8 },
-    alternateRowStyles: { fillColor: [255, 247, 248] },
-    columnStyles: {
-      1: { halign: 'right' },
-      2: { halign: 'right' },
-      3: { halign: 'right' },
-    },
-  })
-
-  doc.save(`relatorio-vendas-${filtro.de}-${filtro.ate}.pdf`)
+  doc.save(`relatorio-${tipo}-${filtro.de}-${filtro.ate}.pdf`)
 }
 </script>
