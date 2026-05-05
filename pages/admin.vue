@@ -36,7 +36,7 @@
         </button>
       </div>
 
-      <p v-if="erroNova" class="px-5 pb-4 text-xs text-red-500 font-semibold">{{ erroNova }}</p>
+      <p v-if="erroNova" class="px-5 pb-4 text-xs text-red-500 font-semibold">⚠️ {{ erroNova }}</p>
       <p v-if="sucessoNova" class="px-5 pb-4 text-xs text-emerald-600 font-semibold">✅ Usuária criada com sucesso!</p>
     </div>
 
@@ -165,8 +165,9 @@ async function criarUsuaria() {
     novaUsuaria.role = 'user'
     await carregarUsuarios()
   } catch (err: any) {
-    erroNova.value = err?.data?.message ?? 'Erro ao criar usuária.'
-  } finally {
+  console.error('Erro completo:', err)
+  erroNova.value = err?.data?.message ?? err?.message ?? 'Erro ao criar usuária.'
+ }  finally {
     criando.value = false
   }
 }
