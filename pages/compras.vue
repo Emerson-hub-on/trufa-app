@@ -139,14 +139,14 @@
 </template>
 
 <script setup lang="ts">
-import { useTrufaStore } from '~/stores/trufa'
+import { useComprasStore } from '~/stores/compras'
 import { usePeriodoFiltro } from '~/composables/compras/usePeriodoFiltro'
 import { useComprasForm } from '~/composables/compras/useComprasForm'
 
 
 definePageMeta({ layout: 'default' })
 
-const store = useTrufaStore()
+const store = useComprasStore()
 
 const { showModal, form, salvar } = useComprasForm()
 const { periodoAtivo, dataInicio, dataFim, periodos, selecionarPeriodo, itensFiltrados: comprasFiltradas } =

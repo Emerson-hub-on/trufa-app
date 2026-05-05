@@ -47,7 +47,7 @@
 
           <div class="flex items-center justify-between mt-1">
             <span class="text-xs text-stone-400">Vendas registradas</span>
-            <span class="text-xs font-bold text-stone-600">{{ store.unidadesPorSabor(s.nome) }} un.</span>
+            <span class="text-xs font-bold text-stone-600">{{ vendasStore.unidadesPorSabor(s.nome) }} un.</span>
           </div>
         </div>
       </div>
@@ -118,12 +118,14 @@
 </template>
 
 <script setup lang="ts">
-import { useTrufaStore } from '~/stores/trufa'
+import { useSaboresStore } from '~/stores/sabores'
+import { useVendasStore } from '~/stores/vendas'
 import { useSaborModal } from '~/composables/sabores/useSaborModal'
 
 definePageMeta({ layout: 'default' })
 
-const store = useTrufaStore()
+const store = useSaboresStore()
+const vendasStore = useVendasStore()
 
 const { showModal, editando, form, abrirModalNovo, abrirModalEditar, salvar, excluir } = useSaborModal()
 

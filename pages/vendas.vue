@@ -7,15 +7,15 @@
         <h2 class="font-black text-rose-700 text-sm uppercase tracking-wide">💸 Vendas</h2>
         <button
           @click="abrirModal"
-          :disabled="store.sabores.length === 0"
+          :disabled="saboresStore.sabores.length === 0"
           class="text-xs font-bold px-4 py-2 rounded-full transition-colors shadow-sm"
-          :class="store.sabores.length > 0 ? 'bg-rose-400 hover:bg-rose-500 text-white' : 'bg-stone-100 text-stone-400 cursor-not-allowed'"
+          :class="saboresStore.sabores.length > 0 ? 'bg-rose-400 hover:bg-rose-500 text-white' : 'bg-stone-100 text-stone-400 cursor-not-allowed'"
         >
           + Nova venda
         </button>
       </div>
 
-      <div v-if="store.sabores.length === 0" class="px-5 py-10 text-center text-stone-400 text-sm">
+      <div v-if="saboresStore.sabores.length === 0" class="px-5 py-10 text-center text-stone-400 text-sm">
         <p class="text-xl mb-2">🍫</p>
         <p class="font-bold text-stone-500 mb-1">Nenhum sabor cadastrado</p>
         <p class="text-xs mb-4">Cadastre sabores antes de registrar vendas.</p>
@@ -46,7 +46,7 @@
             </button>
             <div v-if="dropdownOpen" class="absolute top-full left-0 mt-2 bg-white border border-pink-100 rounded-2xl shadow-lg z-20 min-w-48 overflow-hidden">
               <button
-                v-for="s in store.sabores" :key="s.id"
+                v-for="s in saboresStore.sabores" :key="s.id"
                 @click="saborFiltro = s.nome; dropdownOpen = false"
                 class="w-full text-left px-4 py-2.5 text-xs font-semibold text-stone-700 hover:bg-rose-50 hover:text-rose-700 transition-colors flex items-center justify-between gap-3"
                 :class="saborFiltro === s.nome ? 'bg-rose-50 text-rose-700' : ''"
@@ -117,7 +117,7 @@
                 <td class="px-5 py-3">{{ formatCurrency(v.valorUnit) }}</td>
                 <td class="px-5 py-3 font-black text-rose-500">{{ formatCurrency(v.quantidade * v.valorUnit) }}</td>
                 <td class="px-3 py-3">
-                  <button @click="store.removerVenda(v.id)" class="text-stone-300 hover:text-rose-400 transition-colors font-bold">✕</button>
+                  <button @click="vendasStore.removerVenda(v.id)" class="text-stone-300 hover:text-rose-400 transition-colors font-bold">✕</button>
                 </td>
               </tr>
             </tbody>
@@ -144,7 +144,7 @@
                 <p class="font-bold text-stone-800">{{ v.produto }}</p>
                 <p class="text-xs text-stone-400">{{ v.data }}</p>
               </div>
-              <button @click="store.removerVenda(v.id)" class="text-xs text-rose-400 font-bold">✕</button>
+              <button @click="vendasStore.removerVenda(v.id)" class="text-xs text-rose-400 font-bold">✕</button>
             </div>
             <div class="flex justify-between text-xs text-stone-600 mt-3">
               <span>Qtd: {{ v.quantidade }}</span>
@@ -191,7 +191,7 @@
               <label class="text-xs font-bold uppercase tracking-widest text-stone-600">Sabor *</label>
               <select v-model="form.produto" @change="preencherPreco" class="border border-pink-200 rounded-2xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white">
                 <option value="" disabled>Selecione um sabor</option>
-                <option v-for="s in store.sabores" :key="s.id" :value="s.nome">{{ s.nome }}</option>
+                <option v-for="s in saboresStore.sabores" :key="s.id" :value="s.nome">{{ s.nome }}</option>
               </select>
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -219,14 +219,16 @@
 </template>
 
 <script setup lang="ts">
-import { useTrufaStore } from '~/stores/trufa'
+import { useVendasStore } from '~/stores/vendas'
+import { useSaboresStore } from '~/stores/sabores'
 import { useSaborFiltroDropdown } from '~/composables/vendas/useSaborFiltroDropdown'
 import { useVendasFiltradas } from '~/composables/vendas/useVendasFiltradas'
 import { useVendaModal } from '~/composables/vendas/useVendaModal'
 
 definePageMeta({ layout: 'default' })
 
-const store = useTrufaStore()
+const vendasStore = useVendasStore()
+const saboresStore = useSaboresStore()
 
 const { saborFiltro, dropdownOpen, dropdownRef } = useSaborFiltroDropdown()
 const { periodoAtivo, dataInicio, dataFim, periodos, selecionarPeriodo, vendasFiltradas, totalFiltrado, unidadesFiltradas } = useVendasFiltradas(saborFiltro)
