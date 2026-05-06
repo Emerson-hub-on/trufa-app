@@ -9,29 +9,42 @@ export const useTrufaStore = defineStore('trufa', {
     loading: false,
   }),
 
-  getters: {
-    vendas: () => useVendasStore().vendas,
-    compras: () => useComprasStore().compras,
-    fichasTecnicas: () => useFichasStore().fichasTecnicas,
-    sabores: () => useSaboresStore().sabores,
+getters: {
+  vendas: () => useVendasStore().vendas,
+  compras: () => useComprasStore().compras,
+  fichasTecnicas: () => useFichasStore().fichasTecnicas,
+  sabores: () => useSaboresStore().sabores,
 
-    lucro(): number {
-      return useVendasStore().totalVendas - useComprasStore().totalCompras
-    },
-    custoMedio(): number {
-      const fichasStore = useFichasStore()
-      const totalUnidades = fichasStore.fichasTecnicas.reduce((acc, f) => acc + f.producao, 0)
-      const totalCusto = fichasStore.fichasTecnicas.reduce((acc, f) =>
-        acc + f.ingredientes.reduce((s, i) => s + i.custo, 0), 0)
-      return totalUnidades > 0 ? totalCusto / totalUnidades : 0
-    },
-    maisVendida(): { produto: string; vendas: number } | null {
-      return useVendasStore().maisVendida
-    },
-    totalTrufasProduzidas(): number {
-      return useFichasStore().fichasTecnicas.reduce((acc, f) => acc + f.producao, 0)
-    },
+  totalVendas(): number {
+    return useVendasStore().totalVendas
   },
+
+  totalCompras(): number {
+    return useComprasStore().totalCompras
+  },
+
+  lucro(): number {
+    return this.totalVendas - this.totalCompras
+  },
+
+  custoMedio(): number {
+    const fichasStore = useFichasStore()
+    const totalUnidades = fichasStore.fichasTecnicas.reduce((acc, f) => acc + f.producao, 0)
+    const totalCusto = fichasStore.fichasTecnicas.reduce(
+      (acc, f) => acc + f.ingredientes.reduce((s, i) => s + i.custo, 0),
+      0
+    )
+    return totalUnidades > 0 ? totalCusto / totalUnidades : 0
+  },
+
+  maisVendida(): { produto: string; vendas: number } | null {
+    return useVendasStore().maisVendida
+  },
+
+  totalTrufasProduzidas(): number {
+    return useFichasStore().fichasTecnicas.reduce((acc, f) => acc + f.producao, 0)
+  },
+},
 
   actions: {
     async carregarDados(userId?: string) {

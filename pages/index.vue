@@ -10,12 +10,12 @@
 
       <div class="bg-gradient-to-br from-fuchsia-50 to-pink-50 border border-fuchsia-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5">
         <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-1">📈 Total Vendas</p>
-        <p class="text-xl sm:text-2xl font-black text-fuchsia-600">{{ formatCurrency(store.totalVendas) }}</p>
+        <p class="text-xl sm:text-2xl font-black text-fuchsia-600">{{ formatCurrency(vendasStore.totalVendas) }}</p>
       </div>
 
       <div class="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5">
         <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-orange-400 mb-1">📉 Total Custos</p>
-        <p class="text-xl sm:text-2xl font-black text-orange-500">{{ formatCurrency(store.totalCompras) }}</p>
+        <p class="text-xl sm:text-2xl font-black text-orange-500">{{ formatCurrency(trufaStore.totalCompras) }}</p>
       </div>
     </div>
 
@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { useTrufaStore } from '~/stores/trufa'
+import { useVendasStore } from '~/stores/vendas'
 
 definePageMeta({ layout: 'default' })
 const user = useSupabaseUser()
@@ -122,6 +122,8 @@ watchEffect(() => {
 })
 
 const store = useTrufaStore()
+const vendasStore = useVendasStore()
+const trufaStore = useTrufaStore()
 const recentVendas = computed(() => store.vendas.slice(0, 4))
 watch(user, (u) => {
   if (u) {
@@ -130,6 +132,9 @@ watch(user, (u) => {
 }, { immediate: true })
 
 function formatCurrency(v: number) {
-  return v.toLocaleString('pt-BR', { currency: 'BRL' })
+  return v.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  })
 }
 </script>
