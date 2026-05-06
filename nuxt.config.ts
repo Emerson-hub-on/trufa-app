@@ -8,7 +8,7 @@ export default defineNuxtConfig({
       callback: '/confirm',
       exclude: [],
     },
-    types: '~/types/supabase.ts'
+    types: './types/database.ts'
   },
   vite: {
     server: {
