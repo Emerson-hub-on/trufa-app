@@ -15,11 +15,10 @@ definePageMeta({ layout: false })
 const supabase = useSupabaseClient<Database>()
 
 onMounted(async () => {
-  // Processa o code da URL diretamente, sem depender do watch
+ 
   const { data: { session }, error } = await supabase.auth.getSession()
 
   if (error || !session?.user) {
-    // Tenta trocar o code por sessão (PKCE flow)
     const { data: { session: s2 }, error: e2 } = await supabase.auth.exchangeCodeForSession(
       window.location.href
     )
