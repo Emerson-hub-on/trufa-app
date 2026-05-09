@@ -13,34 +13,45 @@ import type { Database } from '~/types/database'
 definePageMeta({ layout: false })
 
 const supabase = useSupabaseClient<Database>()
-const user = useSupabaseUser()
 
 onMounted(async () => {
-  
-  await supabase.auth.getSession()
+  // Processa o code da URL diretamente, sem depender do watch
+  const { data: { session }, error } = await supabase.auth.getSession()
 
-  const stop = watch(user, async (u) => {
-    if (!u) return
-    stop()
+  if (error || !session?.user) {
+    // Tenta trocar o code por sessão (PKCE flow)
+    const { data: { session: s2 }, error: e2 } = await supabase.auth.exchangeCodeForSession(
+      window.location.href
+    )
 
-    const { data: perfil } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', u.id)
-      .single()
-
-    if (!perfil) {
-      await (supabase.from('profiles') as any).insert({
-        id: u.id,
-        email: u.email ?? '',
-        role: 'user',
-        ativo: true,
-      })
+    if (e2 || !s2?.user) {
+      navigateTo('/login')
+      return
     }
 
+    await garantirPerfil(s2.user)
     navigateTo('/')
-  }, { immediate: true })
+    return
+  }
 
-  setTimeout(() => navigateTo('/login'), 5000)
+  await garantirPerfil(session.user)
+  navigateTo('/')
 })
+
+async function garantirPerfil(user: { id: string; email?: string }) {
+  const { data: perfil } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', user.id)
+    .single()
+
+  if (!perfil) {
+    await (supabase.from('profiles') as any).insert({
+      id: user.id,
+      email: user.email ?? '',
+      role: 'user',
+      ativo: true,
+    })
+  }
+}
 </script>
