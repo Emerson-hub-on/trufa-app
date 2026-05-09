@@ -10,7 +10,7 @@
       />
     </Transition>
 
-    <!-- Sidebar MOBILE: drawer fixo -->
+    <!-- Sidebar MOBILE -->
     <Transition name="slide">
       <aside
         v-if="mobileMenuOpen"
@@ -21,7 +21,7 @@
           <span class="font-black text-rose-700 text-sm">Trufa Manager</span>
           <button @click="mobileMenuOpen = false" class="ml-auto w-7 h-7 flex items-center justify-center rounded-lg border border-pink-300 text-rose-700 hover:bg-pink-200 transition-colors text-sm">✕</button>
         </div>
-        <nav class="flex flex-col gap-1 p-2 pt-3">
+        <nav class="flex flex-col gap-1 p-2 pt-3 flex-1">
           <NuxtLink v-if="isAdmin" to="/admin" @click="mobileMenuOpen = false" class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-rose-700 hover:bg-pink-200/60 transition-colors" active-class="!bg-rose-400 !text-white">
             <span class="text-lg">👑</span> Admin
           </NuxtLink>
@@ -44,10 +44,24 @@
             <span class="text-lg">📊</span> Relatório
           </NuxtLink>
         </nav>
+
+        <!-- Perfil/Logout mobile -->
+        <div class="p-2 border-t border-pink-200">
+          <button
+            @click="logout"
+            class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-rose-700 hover:bg-rose-200/60 transition-colors"
+          >
+            <span class="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center text-base flex-shrink-0">👤</span>
+            <div class="flex flex-col items-start min-w-0">
+              <span class="text-xs font-black text-rose-700 truncate w-full">{{ userEmail }}</span>
+              <span class="text-[10px] text-rose-400 font-semibold">Sair da conta</span>
+            </div>
+          </button>
+        </div>
       </aside>
     </Transition>
 
-    <!-- Sidebar DESKTOP: estático -->
+    <!-- Sidebar DESKTOP -->
     <aside
       class="hidden lg:flex flex-col flex-shrink-0 sticky top-0 h-screen bg-gradient-to-b from-rose-100 to-pink-50 border-r border-pink-200 transition-all duration-250"
       :class="sidebarCollapsed ? 'w-16' : 'w-56'"
@@ -59,7 +73,7 @@
           {{ sidebarCollapsed ? '›' : '‹' }}
         </button>
       </div>
-      <nav class="flex flex-col gap-1 p-2 pt-3">
+      <nav class="flex flex-col gap-1 p-2 pt-3 flex-1">
         <NuxtLink v-if="isAdmin" to="/admin" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-rose-700 hover:bg-pink-200/60 transition-colors whitespace-nowrap" active-class="!bg-rose-400 !text-white shadow-sm">
           <span class="text-lg flex-shrink-0">👑</span>
           <span v-if="!sidebarCollapsed">Admin</span>
@@ -89,13 +103,27 @@
           <span v-if="!sidebarCollapsed">Relatório</span>
         </NuxtLink>
       </nav>
+
+      <!-- Perfil/Logout desktop -->
+      <div class="p-2 border-t border-pink-200">
+        <button
+          @click="logout"
+          class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-rose-700 hover:bg-rose-200/60 transition-colors"
+          :title="sidebarCollapsed ? 'Sair da conta' : ''"
+        >
+          <span class="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center text-base flex-shrink-0">👤</span>
+          <div v-if="!sidebarCollapsed" class="flex flex-col items-start min-w-0 overflow-hidden">
+            <span class="text-xs font-black text-rose-700 truncate w-full">{{ userEmail }}</span>
+            <span class="text-[10px] text-rose-400 font-semibold">Sair da conta</span>
+          </div>
+        </button>
+      </div>
     </aside>
 
     <!-- Conteúdo principal -->
     <div class="flex flex-col flex-1 min-w-0 w-full">
       <header class="flex items-center justify-between px-4 sm:px-6 py-4 bg-white border-b border-pink-100 sticky top-0 z-10 shadow-sm shadow-pink-50">
         <div class="flex items-center gap-3">
-          <!-- Hambúrguer mobile -->
           <button
             @click="mobileMenuOpen = true"
             class="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg border border-pink-200 text-rose-600 hover:bg-rose-50 transition-colors"
@@ -127,10 +155,12 @@ const mobileMenuOpen = ref(false)
 const store = useTrufaStore()
 const supabase = useSupabaseClient() as any
 const isAdmin = ref(false)
+const userEmail = ref('')
 
 onMounted(() => {
   supabase.auth.getSession().then(async ({ data: { session } }: any) => {
     if (!session?.user?.id) return
+    userEmail.value = session.user.email ?? ''
     await store.carregarDados(session.user.id)
     const { data } = await supabase
       .from('profiles')
