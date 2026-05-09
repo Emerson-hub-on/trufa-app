@@ -1,4 +1,4 @@
-import type { FichaTecnica, Ingrediente } from '~/stores/trufa'
+import type { FichaTecnica, Ingrediente } from '~/stores/fichas'
 
 export function useIngredienteModal(fichaSelecionada: Ref<FichaTecnica | null>) {
   const showModalIngrediente = ref(false)

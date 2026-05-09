@@ -1,7 +1,7 @@
-import type { FichaTecnica } from '~/stores/trufa'
+import type { FichaTecnica } from '~/stores/fichas'
 
 export function useFichaModal(fichaSelecionada: Ref<FichaTecnica | null>) {
-  const store = useTrufaStore()
+  const store = useFichasStore()
 
   const showModalFicha = ref(false)
   const editandoFicha = ref<FichaTecnica | null>(null)

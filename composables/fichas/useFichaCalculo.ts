@@ -1,4 +1,4 @@
-import type { FichaTecnica } from '~/stores/trufa'
+import type { FichaTecnica } from '~/stores/fichas'
 
 export function useFichaCalculo() {
   const store = useTrufaStore()
