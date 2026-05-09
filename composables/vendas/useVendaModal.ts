@@ -1,5 +1,8 @@
+
+
 export function useVendaModal(saborFiltro: Ref<string | null>) {
   const store = useTrufaStore()
+  const vendasStore = useVendasStore()
 
   const showModal = ref(false)
   const form = reactive({ data: '', produto: '', quantidade: 0, valorUnit: 0 })
@@ -23,7 +26,7 @@ export function useVendaModal(saborFiltro: Ref<string | null>) {
 
   async function salvar() {
     if (!form.data || !form.produto || !form.quantidade || !form.valorUnit) return
-    await store.adicionarVenda({ ...form })
+    await vendasStore.adicionarVenda({ ...form }) // ✅ era store.adicionarVenda
     Object.assign(form, { data: '', produto: '', quantidade: 0, valorUnit: 0 })
     showModal.value = false
   }
