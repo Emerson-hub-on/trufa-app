@@ -1,5 +1,4 @@
 
-
 export function useVendaModal(saborFiltro: Ref<string | null>) {
   const store = useTrufaStore()
   const vendasStore = useVendasStore()

@@ -1,7 +1,7 @@
-import type { Sabor } from '~/stores/trufa'
+import type { Sabor } from '~/stores/sabores'
 
 export function useSaborModal() {
-  const store = useTrufaStore()
+  const sabor = useSaboresStore()
 
   const showModal = ref(false)
   const editando = ref<Sabor | null>(null)
@@ -23,9 +23,9 @@ export function useSaborModal() {
     if (!form.nome || !form.preco) return
 
     if (editando.value) {
-      await store.editarSabor(editando.value.id, { ...form })
+      await sabor.editarSabor(editando.value.id, { ...form })
     } else {
-      await store.adicionarSabor({ ...form })
+      await sabor.adicionarSabor({ ...form })
     }
 
     showModal.value = false
@@ -34,7 +34,7 @@ export function useSaborModal() {
   async function excluir() {
     if (!editando.value) return
     if (!confirm(`Excluir "${editando.value.nome}"? As vendas existentes não serão apagadas.`)) return
-    await store.removerSabor(editando.value.id)
+    await sabor.removerSabor(editando.value.id)
     showModal.value = false
   }
 
