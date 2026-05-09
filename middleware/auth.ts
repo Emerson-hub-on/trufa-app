@@ -4,7 +4,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const user = useSupabaseUser()
   const supabase = useSupabaseClient<Database>()
 
-  if (to.path === '/login') return
+  if (to.path === '/login' || to.path === '/auth/callback') return
 
   if (!user.value) return navigateTo('/login')
 
@@ -14,7 +14,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
     .eq('id', user.value.id)
     .single()
 
-  // Cast explícito para o tipo correto
   const perfil = data as { ativo: boolean; role: string } | null
 
   if (!perfil || !perfil.ativo) {

@@ -16,6 +16,7 @@ const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 
 onMounted(async () => {
+  
   await supabase.auth.getSession()
 
   const stop = watch(user, async (u) => {
@@ -29,15 +30,17 @@ onMounted(async () => {
       .single()
 
     if (!perfil) {
-    await (supabase.from('profiles') as any).insert({
+      await (supabase.from('profiles') as any).insert({
         id: u.id,
         email: u.email ?? '',
         role: 'user',
         ativo: true,
-    })
+      })
     }
 
     navigateTo('/')
   }, { immediate: true })
+
+  setTimeout(() => navigateTo('/login'), 5000)
 })
 </script>
