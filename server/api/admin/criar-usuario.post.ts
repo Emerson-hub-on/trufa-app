@@ -1,4 +1,4 @@
-// server/api/admin/criar-usuario.post.ts
+
 import { createClient } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {

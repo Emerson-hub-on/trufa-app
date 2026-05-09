@@ -5,7 +5,8 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       <div class="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5">
         <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-rose-400 mb-1">💰 Lucro do Mês</p>
-        <p class="text-xl sm:text-2xl font-black text-rose-600">{{ formatCurrency(store.lucro) }}</p>
+        <p class="text-xl sm:text-2xl font-black text-rose-600">{{ formatCurrency(lucroMesAtual) }}
+</p>
       </div>
 
       <div class="bg-gradient-to-br from-fuchsia-50 to-pink-50 border border-fuchsia-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5">
@@ -118,24 +119,39 @@ import { useVendasStore } from '~/stores/vendas'
 definePageMeta({ layout: 'default' })
 const user = useSupabaseUser()
 
-watchEffect(() => {
-  console.log('USER:', user.value)
-})
-
 const store = useTrufaStore()
 const vendasStore = useVendasStore()
 const trufaStore = useTrufaStore()
 const recentVendas = computed(() => store.vendas.slice(0, 4))
+
+// ✅ Lucro do mês = vendas do mês - compras do mês
+const lucroMesAtual = computed(() => {
+  const agora = new Date()
+  const ano = agora.getFullYear()
+  const mes = agora.getMonth()
+
+  const vendasMes = store.vendas
+    .filter(v => {
+      const partes = v.data.split('-')
+      return Number(partes[0]) === ano && (Number(partes[1]) - 1) === mes
+    })
+    .reduce((acc, v) => acc + v.quantidade * v.valorUnit, 0)
+
+  const comprasMes = store.compras
+    .filter(c => {
+      const partes = c.data.split('-')
+      return Number(partes[0]) === ano && (Number(partes[1]) - 1) === mes
+    })
+    .reduce((acc, c) => acc + c.custo, 0)
+
+  return vendasMes - comprasMes
+})
+
 watch(user, (u) => {
-  if (u) {
-    store.carregarDados()
-  }
+  if (u) store.carregarDados()
 }, { immediate: true })
 
 function formatCurrency(v: number) {
-  return v.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  })
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 </script>
