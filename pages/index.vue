@@ -10,7 +10,8 @@
 
       <div class="bg-gradient-to-br from-fuchsia-50 to-pink-50 border border-fuchsia-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5">
         <p class="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-1">📈 Total Vendas</p>
-        <p class="text-xl sm:text-2xl font-black text-fuchsia-600">{{ formatCurrency(vendasStore.totalVendas) }}</p>
+        <p class="text-xl sm:text-2xl font-black text-fuchsia-600">{{ formatCurrency(vendasStore.totalVendasMesAtual) }}
+</p>
       </div>
 
       <div class="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5">

@@ -16,24 +16,43 @@ export const useVendasStore = defineStore('vendas', {
   getters: {
     totalVendas: (state) =>
       state.vendas.reduce((acc, v) => acc + v.quantidade * v.valorUnit, 0),
+
     totalUnidades: (state) =>
       state.vendas.reduce((acc, v) => acc + v.quantidade, 0),
+
     maisVendida: (state): { produto: string; vendas: number } | null => {
       const map: Record<string, number> = {}
       state.vendas.forEach(v => { map[v.produto] = (map[v.produto] || 0) + v.quantidade })
       const top = Object.entries(map).sort((a, b) => b[1] - a[1])[0]
       return top ? { produto: top[0], vendas: top[1] } : null
     },
+
     vendasPorSabor: (state) => (sabor: string) =>
       state.vendas.filter(v => v.produto === sabor),
+
     totalPorSabor: (state) => (sabor: string) =>
       state.vendas
         .filter(v => v.produto === sabor)
         .reduce((acc, v) => acc + v.quantidade * v.valorUnit, 0),
+
     unidadesPorSabor: (state) => (sabor: string) =>
       state.vendas
         .filter(v => v.produto === sabor)
         .reduce((acc, v) => acc + v.quantidade, 0),
+
+    totalVendasMesAtual: (state) => {
+      const agora = new Date()
+      const mes = agora.getMonth()
+      const ano = agora.getFullYear()
+      return state.vendas
+        .filter(v => {
+          const partes = v.data.split('-')
+          const aV = Number(partes[0])
+          const mV = Number(partes[1])
+          return aV === ano && (mV - 1) === mes
+        })
+        .reduce((acc, v) => acc + v.quantidade * v.valorUnit, 0)
+    },
   },
 
   actions: {
